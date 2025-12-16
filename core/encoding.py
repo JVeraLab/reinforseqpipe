@@ -1,6 +1,11 @@
-import 
+# core/encoding.py
 
+import torch
+from Bio.Seq import Seq
 
+# ==========================================================================================================================================================
+# Encoding of Codons
+# ==========================================================================================================================================================
 class CodonEmbedding:
     """
     Handles the encoding of nucleotides and codons into a numerical vector representation
@@ -34,6 +39,15 @@ class CodonEmbedding:
             "TTA": "L", "TTC": "F", "TTG": "L", "TTT": "F"
         }
         self.codons = list(self.genetic_code.keys())
+        
+    def _compute_synonymous_groups(self) -> dict[str, list[str]]:
+        """Creates a mapping from amino acid to its synonymous codons."""
+        syn_dict: dict[str, list[str]] = {}
+        for codon, aa in self.genetic_code.items():
+            if aa not in syn_dict:
+                syn_dict[aa] = []
+            syn_dict[aa].append(codon)
+        return syn_dict
 
     def compute_codon_vector(self, codon: str) -> list[int]:
         """
@@ -45,3 +59,27 @@ class CodonEmbedding:
         # Convert the string of '0's and '1's into a list of integers.
         bin12 = [int(char) for char in bin12_str]
         return bin12 
+
+# ==========================================================================================================================================================
+# Verification of Final Sequence
+# ==========================================================================================================================================================
+class Verification:
+    """
+    Accessory class to verify that the original and optimized sequences code 
+    for the same polypeptide. All other metrics (CAI, MFE, GC) are calculated 
+    and reported in the worker function.
+    """
+    def __init__(self, original_sequence: str, final_sequence: str):
+        self.original_sequence = original_sequence
+        self.final_sequence = final_sequence
+
+    def compare_dna_sequences(self) -> bool:
+        """
+        Translates both DNA sequences to check if they result in the same peptide sequence.
+        This is the only necessary verification for sequence validity.
+        """
+        # Seq(dna).translate() automatically handles the genetic code
+        original_peptide = Seq(self.original_sequence).translate()
+        final_peptide = Seq(self.final_sequence).translate()
+
+        return original_peptide == final_peptide

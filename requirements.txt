@@ -1,0 +1,6 @@
+numpy
+pandas
+biopython
+cai==1.1.2
+ViennaRNA
+torch
