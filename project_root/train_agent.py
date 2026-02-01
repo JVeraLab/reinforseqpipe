@@ -107,7 +107,6 @@ def train_agent_dqn(original_dna: str, device: torch.device, weights: dict, num_
         episode_cai.append(current_cai)
         episode_mfe.append(current_mfe)
         episode_score.append(current_score)
-        print(f'THe episode MFE:{episode_mfe} andepisodeCAI:{episode_cai}')
         # 8. Update best sequence
         # The goal is to MINIMIZE the score, so we check for < best_score.
         if current_score > best_score:
