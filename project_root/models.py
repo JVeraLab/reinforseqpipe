@@ -29,13 +29,16 @@ class DQNModel(nn.Module):
 
 
 class ReplayBuffer:
+    """
+    Global update of the model state. On practice the update is not used.
+    """
     def __init__(self, capacity):
         self.capacity = capacity
         self.buffer = []
         self.position = 0
         
     def push(self, state, action, reward, next_state, allowed_mask, done):
-        # Save a transition as a tuple: (state, action, reward, next_state, allowed_mask, done)
+        # Tuple structure: (state, action, reward, next_state, allowed_mask, done)
         if len(self.buffer) < self.capacity:
             self.buffer.append(None)
         self.buffer[self.position] = (state, action, reward, next_state, allowed_mask, done)
@@ -105,11 +108,10 @@ class DQNAgent:
                 chosen = random.choice(allowed_indices)
             return chosen
 
-        # Otherwise, choose the best allowed action according to Q-values.
         with torch.no_grad():
             q_values = self.policy_net(state)  # shape: (1, seq_length*num_codons)
             q_values = q_values.cpu().squeeze()
-            # Mask out illegal actions by assigning a very low value.
+            # Mask out mutatiosn leading to another amino acid
             q_values[~allowed_mask] = -1e9
             chosen = int(torch.argmax(q_values).item())
             return chosen

@@ -10,23 +10,8 @@ from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from Bio import SeqIO  
 import argparse
-from utils import Verification, Assemble
-from device_setup import get_device, init_multiprocessing
-from train_agent import train_agent_dqn
-
-#!/usr/bin/env python
-
-import os
-import json 
-import time 
-import torch 
-import argparse 
-import pandas as pd
-import math
-from datetime import datetime
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from Bio import SeqIO  
 import psutil
+
 from environment import MRNAEnv
 from utils import Verification, Assemble
 from device_setup import get_device, init_multiprocessing
@@ -40,7 +25,7 @@ def parse_args():
     parser.add_argument("-l", "--lam", type=float, default=4.0, help="Lambda factor (default: 4.0)")
     parser.add_argument("-e", "--episodes", type=int, default=20, help="Episodes (default: 20)")
     parser.add_argument("-p", "--parallel", type=int, default=1, help="Parallel processes (default: 1)")
-    parser.add_argument("-g", "--gen", action="store_true", default = False, help="Enable generation mode")
+    parser.add_argument("-g", "--gen", action="store_true", default = False, help="Enable generation mode") # Use only for the testing the original paper sequences
     return parser.parse_args()
 
 

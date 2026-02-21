@@ -1,6 +1,13 @@
+# Machine Learning & Core Math
+torch>=2.0.0
 numpy
 pandas
+psutil
+
+# Bioinformatics & Sequence Analysis
 biopython
-cai==1.1.2
-ViennaRNA
-torch
+codon-bias
+# Note: ViennaRNA (import RNA) usually requires: conda install -c bioconda viennarna
+
+# Infrastructure
+setuptools
