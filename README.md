@@ -7,9 +7,9 @@
 2. Conda or Mamba (Required for ViennaRNA/import RNA)
 
 # Clone repository: 
-Run followign commands in Bash:
-git clone 
-cd 
+
+git clone https://gitlab.jveralab.net/mirasbbr/reinforseqpipe
+cd reinforseqpipe
 
 # Create the environment
 conda create -n mrna_env python=3.9 -y
