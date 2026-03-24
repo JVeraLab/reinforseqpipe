@@ -12,6 +12,8 @@ from Bio import SeqIO
 import argparse
 import psutil
 
+
+# Import of local scripts required for the work of the pipeline
 from environment import MRNAEnv
 from utils import Verification, Assemble
 from device_setup import get_device, init_multiprocessing
@@ -95,8 +97,6 @@ def main():
     args = parse_args()
     device = get_device()
     init_multiprocessing(device)
-    
-
 
     folder_name = 'results_optimization'
     if not os.path.exists(folder_name): os.makedirs(folder_name)

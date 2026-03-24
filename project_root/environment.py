@@ -1,8 +1,8 @@
-import torch
+
 import math
+import torch
 import RNA
-from embeddings import CodonEmbedding
-from Bio.SeqUtils import CodonAdaptationIndex as CAI_Bio
+from codon_bias import CodonAdaptationIndex
 
 class MRNAEnv:
     """
@@ -40,28 +40,28 @@ class MRNAEnv:
         self.prev_mfe = None 
         self.embedding_function = embedding_function
         self.weights = weights
+        
+        # Initialize the model once for efficiency
+        # The library expects a dictionary of relative weights (w)
+        self.cai_model = CodonAdaptationIndex(bias=self.weights)
 
     def _compute_synonymous_groups(self):
-        syn_dict = {}
-        for codon, aa in self.genetics_code.items():
-            if aa not in syn_dict:
-                syn_dict[aa] = []
-            syn_dict[aa].append(codon)
-        return syn_dict
+        synonymous_dictionary = {}
+        for codon, amino_acid in self.genetics_code.items():
+            if amino_acid not in synonymous_dictionary:
+                synonymous_dictionary[amino_acid] = []
+            synonymous_dictionary[amino_acid].append(codon)
+        return synonymous_dictionary
 
     def calculate_cai(self, mrna_sequence):
         """
-        MANUAL CAI FIX: Calculates geometric mean using self.weights.
+        Optimized CAI calculation using the codon-bias library.
+        This library was brought isntead of CAI library which became unavaialble for download currently.
         """
-        codons = [mrna_sequence[i:i+3] for i in range(0, len(mrna_sequence), 3)]
-        score = 0.0
-        count = 0
-        for codon in codons:
-            # Use 0.0001 as floor to prevent log(0) errors
-            weight = self.weights.get(codon, 0.0001)
-            score += math.log(weight)
-            count += 1
-        return math.exp(score / count) if count > 0 else 0
+        if isinstance(mrna_sequence, list):
+            mrna_sequence = "".join(mrna_sequence)
+            
+        return self.cai_model.get_score(mrna_sequence)
 
     def calculate_mfe(self, mrna_sequence):
         return RNA.fold(mrna_sequence.replace("T", "U"))[1]
@@ -94,18 +94,19 @@ class MRNAEnv:
         if not mrna_sequence: return 0
         return 100 * (mrna_sequence.count('G') + mrna_sequence.count('C')) / len(mrna_sequence)
 
-    def calculate_mfecaiscore(self, mfe, cai, l, factor):
-        # Safety check for log10
-        if cai <= 0: cai = 0.0001
-        return abs(mfe - l * factor * math.log10(cai))
-
+    def calculate_mfecaiscore(self, mfe, cai, sequence_length, factor):
+        # Safety check for log10 because in a very rare scenario the CAI can be loaded as zero value
+        if cai <= 0: 
+            cai = 0.0001 
+        return abs(mfe - sequence_length * factor * math.log10(cai))
+    
     def step(self, position, new_codon):
         info = {} # Pre-initialize to avoid UnboundLocalError
         old_codon = self.current_mrna[position]
-        old_aa = self.genetics_code[old_codon]
-        new_aa = self.genetics_code[new_codon]
+        old_amino_acid = self.genetics_code[old_codon]
+        new_amino_acid = self.genetics_code[new_codon]
 
-        if old_aa != new_aa:
+        if old_amino_acid != new_amino_acid:
             reward = -1.0
             done = True
             info = {"error": "Non-synonymous substitution attempted"}
@@ -114,9 +115,9 @@ class MRNAEnv:
         self.current_mrna[position] = new_codon
         self.steps_taken += 1
         
-        dna_seq = "".join(self.current_mrna)
-        new_cai = self.calculate_cai(dna_seq)
-        new_mfe = self.calculate_mfe(dna_seq)
+        dna_sequence = "".join(self.current_mrna)
+        new_cai = self.calculate_cai(dna_sequence)
+        new_mfe = self.calculate_mfe(dna_sequence)
 
         cai_change = new_cai - self.prev_cai
         mfe_change = -(new_mfe - self.prev_mfe)
