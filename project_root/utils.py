@@ -51,7 +51,7 @@ class Assemble:
                 for i, linker in enumerate(linkers):
                     base_sequence += linker + perm[i + 1]
                 # Append the final linker and the marker tag
-                sequences.append(base_sequence + self.linker[0] + self.myctag_aa)
+                sequences.append(base_sequence + self.linker[0])
 
         return sequences
     
@@ -74,7 +74,7 @@ class Assemble:
                     raise ValueError(f"Unknown amino acid: {aa}")
                 
             # Add start and stop codons
-            full_dna_sequence = self.startcodon + "".join(dna_sequence) + self.stopcodon
+            full_dna_sequence = self.startcodon + "".join(dna_sequence) + self.myctag_dna + self.stopcodon
             final_constructs.append(full_dna_sequence)
 
         # The original code calculates the length of the tag+stop in codons for the mask.
