@@ -51,7 +51,7 @@ def get_smart_parallel_count(requested_p):
     return max(1, smart_limit)
 
 def worker(sequence: str, seqname: str, device: torch.device, weights: dict, num_episodes: int, 
-           max_steps: int, factor: float, mask_last_n_codons: int) -> tuple[str, dict] | None:
+           max_steps: int, factor: float, mask_last_n_codons: int):
     
     print(f"Worker {seqname} starting.")
     start_time = time.perf_counter()
@@ -66,6 +66,7 @@ def worker(sequence: str, seqname: str, device: torch.device, weights: dict, num
     verified = Verification(sequence, best_sequence).compare_dna_sequences()
     
     seq_length_codons = len(sequence) // 3
+    original_mfe_cai_score = abs(original_dna_mfe - factor * seq_length_codons * math.log10(original_dna_cai))
     final_mfe_cai_score = abs(best_sequence_mfe - factor * seq_length_codons * math.log10(best_sequence_cai))
 
     # KEEPING YOUR EXACT DICTIONARY STRUCTURE
@@ -83,10 +84,8 @@ def worker(sequence: str, seqname: str, device: torch.device, weights: dict, num
         "Final CAI": round(best_sequence_cai, 4), 
         "Final MFE": round(best_sequence_mfe, 4), 
         "Final GC content": round(best_sequence_gc_content, 4),
-        "Original MFExCAI score": round(final_mfe_cai_score, 4), 
-        "Final MFExCAI score": round(final_mfe_cai_score, 4),
-        "The gain of CAI score:": round(best_sequence_cai - original_dna_cai, 4),
-        "The gain of MFE score:": round(original_dna_mfe - best_sequence_mfe, 4), 
+        "Original MFECAIλ score": round(original_mfe_cai_score, 4), 
+        "Final MFECAIλ score": round(final_mfe_cai_score, 4),
         "Peptide_compatibility": bool(verified),
         "Time Taken (s)": round(time_taken, 4)
     }
@@ -140,7 +139,7 @@ def main():
     
     with open(f"{folder_name}/optimized_{ts}.fasta", 'w') as f:
         for _, row in df_results.iterrows():
-            header = f">{row['seqname']} | CAI:{row['Final CAI']} | MFE:{row['Final MFE']} | Score:{row['Final MFExCAI score']}"
+            header = f">{row['seqname']} | CAI:{row['Final CAI']} | MFE:{row['Final MFE']} | Score:{row['Final MFECAIλ score']}"
             f.write(f"{header}\n{row['Final Sequence']}\n")
     print(f"Done. Files saved in {folder_name}")
 

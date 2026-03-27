@@ -2,7 +2,7 @@
 import math
 import torch
 import RNA
-from codon_bias import CodonAdaptationIndex
+#from CAI import CAI
 
 class MRNAEnv:
     """
@@ -40,10 +40,9 @@ class MRNAEnv:
         self.prev_mfe = None 
         self.embedding_function = embedding_function
         self.weights = weights
-        
+
         # Initialize the model once for efficiency
         # The library expects a dictionary of relative weights (w)
-        self.cai_model = CodonAdaptationIndex(bias=self.weights)
 
     def _compute_synonymous_groups(self):
         synonymous_dictionary = {}
@@ -53,15 +52,42 @@ class MRNAEnv:
             synonymous_dictionary[amino_acid].append(codon)
         return synonymous_dictionary
 
+    """
+    def calculate_cai(self, mrna_sequence):
+        if isinstance(mrna_sequence, list):
+            mrna_sequence = "".join(mrna_sequence)
+            
+        # The CAI library function takes the sequence and the precalculated weights dictionary
+        return CAI(mrna_sequence, weights=self.weights)
+    """  
     def calculate_cai(self, mrna_sequence):
         """
-        Optimized CAI calculation using the codon-bias library.
-        This library was brought isntead of CAI library which became unavaialble for download currently.
+        Manual CAI calculation without external libraries.
+        Calculates the geometric mean of codon weights using logarithms to prevent numerical underflow.
         """
         if isinstance(mrna_sequence, list):
             mrna_sequence = "".join(mrna_sequence)
             
-        return self.cai_model.get_score(mrna_sequence)
+        sequence_length_in_bases = len(mrna_sequence)
+        
+        sum_of_logarithms = 0.0
+        valid_codon_count = 0
+        
+        for codon_start_index in range(0, sequence_length_in_bases, 3):
+            current_codon = mrna_sequence[codon_start_index : codon_start_index + 3]
+            
+            if len(current_codon) == 3 and current_codon in self.weights:
+                codon_weight = self.weights[current_codon]
+                if codon_weight > 0:
+                    sum_of_logarithms += math.log(codon_weight)
+                valid_codon_count += 1
+                
+        if valid_codon_count == 0:
+            return 0.0
+            
+        codon_adaptation_index = math.exp(sum_of_logarithms / valid_codon_count)
+        
+        return codon_adaptation_index
 
     def calculate_mfe(self, mrna_sequence):
         return RNA.fold(mrna_sequence.replace("T", "U"))[1]

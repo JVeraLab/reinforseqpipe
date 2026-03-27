@@ -7,7 +7,7 @@ psutil
 # Bioinformatics & Sequence Analysis
 biopython
 codon-bias
-# Note: ViennaRNA (import RNA) usually requires: conda install -c bioconda viennarna
+viennarna==2.7.2
 
 # Infrastructure
 setuptools
