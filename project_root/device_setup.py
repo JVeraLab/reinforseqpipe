@@ -2,7 +2,7 @@ import torch
 import multiprocessing as mp
 
 def get_device():
-    # Detect Nvidia (CUDA) or AMD (ROCm)
+    # Detect Nvidia (CUDA)
     if torch.cuda.is_available():
         return torch.device("cuda")
     # Detect Apple Silicon (MPS)

@@ -1,7 +1,7 @@
 class CodonEmbedding:
     """
-    Handles the encoding of nucleotides and codons into a numerical vector representation
-    for the DQN model's state input.
+    Handles the encoding of nucleotides and codons into a numerical vector representation 
+    with size of 12 bits, suitable for the DQN model's LSTM.
     """
     def __init__(self):
         # One-hot encoding for each nucleotide (A=0001, T=0010, C=0100, G=1000)

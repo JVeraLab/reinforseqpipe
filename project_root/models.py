@@ -9,6 +9,12 @@ from environment import MRNAEnv, compute_allowed_mask
 
 
 class DQNModel(nn.Module):
+    """
+    Initializes the neural network layers, setting up an LSTM to understand the sequence 
+    context and a linear layer to output scores (Q-values) for choosing each possible codon at every position.
+    Take a note that both LSTM and Linear contain the same hidden size.
+    """
+
     def __init__(self, input_size, hidden_size, seq_length, num_codons):
         super(DQNModel, self).__init__()
         self.seq_length = seq_length
@@ -17,7 +23,11 @@ class DQNModel(nn.Module):
         self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
         # For each position, output Q-values for each codon (of size num_codons).
         self.fc = nn.Linear(hidden_size, num_codons)
-        
+
+    """
+    Takes the current state of the sequence and passes it through the network to predict 
+    the value of every possible codon change, flattening the result into a single list of scores.
+    """
     def forward(self, state):
         # state shape: (batch_size, seq_length, input_size)
         lstm_out, _ = self.lstm(state)  # shape: (batch_size, seq_length, hidden_size)
@@ -75,7 +85,13 @@ class DQNAgent:
         self.memory = ReplayBuffer(buffer_capacity)
         
     def get_epsilon(self):
-        # Exponential decay of epsilon
+        """ 
+        Exponential decay of epsilon. The hyperparameter here was epsilon_decay as 
+        the numebr of steps was nto fixed and correlated with length of the sequence. 
+        So instead of optimzing the whole I have optimized the epsilon_decay only.
+        The decay is such that after epsilon_decay steps, epsilon will be close to epsilon_final.
+
+        """
         return self.epsilon_final + (self.epsilon_start - self.epsilon_final) * \
                np.exp(-1. * self.steps_done / self.epsilon_decay)
         

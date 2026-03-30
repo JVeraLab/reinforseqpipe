@@ -20,7 +20,12 @@ from device_setup import get_device, init_multiprocessing
 from train_agent import train_agent_dqn
 
 def parse_args():
-    """Handles CLI inputs with shortened flags."""
+    """
+    Handles CLI inputs with shortened flags.
+    Generation mode (-g) is only for testing the original code based on automatic
+    peptides construction and backtranslatio. In the current version fo the file
+    this mode is not required as all the sequcnes are given in the test_sequences.fasta file.
+    """
     parser = argparse.ArgumentParser(description="ReinforSeqPipe CLI")
     parser.add_argument("-w", "--weights", type=str, required=True, help="Path to weights JSON")
     parser.add_argument("-f", "--fasta", type=str, required=True, help="Path to input FASTA")

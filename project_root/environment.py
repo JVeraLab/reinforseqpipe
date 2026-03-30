@@ -41,8 +41,6 @@ class MRNAEnv:
         self.embedding_function = embedding_function
         self.weights = weights
 
-        # Initialize the model once for efficiency
-        # The library expects a dictionary of relative weights (w)
 
     def _compute_synonymous_groups(self):
         synonymous_dictionary = {}
@@ -63,6 +61,7 @@ class MRNAEnv:
     def calculate_cai(self, mrna_sequence):
         """
         Manual CAI calculation without external libraries.
+        To avoid the problems with environment setup this approach was used.
         Calculates the geometric mean of codon weights using logarithms to prevent numerical underflow.
         """
         if isinstance(mrna_sequence, list):
@@ -78,6 +77,8 @@ class MRNAEnv:
             
             if len(current_codon) == 3 and current_codon in self.weights:
                 codon_weight = self.weights[current_codon]
+                if codon_weight == 0: # In very rare instances the weight can be zero. To avoid the error code returnz zero.
+                    return 0.0
                 if codon_weight > 0:
                     sum_of_logarithms += math.log(codon_weight)
                 valid_codon_count += 1
@@ -132,12 +133,14 @@ class MRNAEnv:
         old_amino_acid = self.genetics_code[old_codon]
         new_amino_acid = self.genetics_code[new_codon]
 
+        # Check for non-synonymous substitution and terminate episode if it occurs.
         if old_amino_acid != new_amino_acid:
             reward = -1.0
             done = True
             info = {"error": "Non-synonymous substitution attempted"}
             return self.get_state(), reward, done, info
 
+        # Update the codon at the specified position
         self.current_mrna[position] = new_codon
         self.steps_taken += 1
         
@@ -145,16 +148,18 @@ class MRNAEnv:
         new_cai = self.calculate_cai(dna_sequence)
         new_mfe = self.calculate_mfe(dna_sequence)
 
+        # Calcaulte the absolute changes in CAI and MFE for tracking and stats.
         cai_change = new_cai - self.prev_cai
         mfe_change = -(new_mfe - self.prev_mfe)
 
         self.cai_changes.append(abs(cai_change))
         self.mfe_changes.append(abs(mfe_change))
 
-        # Reward logic as you provided
+        # Reward equation based on MFECAIlambda score change from Zhang et al., 2021 paper
         total_reward = (self.calculate_mfecaiscore(new_mfe, new_cai, self.length/3, self.factor) - 
                         self.calculate_mfecaiscore(self.prev_mfe, self.prev_cai, self.length/3, self.factor)) 
 
+        # Update previous CAI and MFE for the next step
         self.prev_cai = new_cai
         self.prev_mfe = new_mfe
         done = self.steps_taken >= self.max_steps
@@ -166,6 +171,10 @@ class MRNAEnv:
         return self.get_state(), total_reward, done, info
 
     def get_allowed_actions(self, position):
+        """
+        Returns a list of legal codons that can be substituted at the given position.
+        """
+
         if position >= len(self.current_mrna) - self.mask_last_n_codons:
             return [self.current_mrna[position]]                
         current_codon = self.current_mrna[position]

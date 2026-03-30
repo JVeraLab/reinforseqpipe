@@ -61,7 +61,7 @@ Contains results for three different **$lambda$** parameters (1, 4, and 10) unde
 
 * **Folder:** `data_analysis/stresults_30_05`
 This folder contains sensitivity test results for eight different parameters: **batch_size**, **decay**, **initial_epsilon** (or start epsilon), **final_epsilon**, **gamma_parameter**, **hidden_size**, **learning_rate**, and **update_rate**.
-    * **Note on hidden_size:** Both the LSTM (mRNA sequence analysis) and the FNN (DQN decision making) used the same number of hidden neurons. While they were intended to be tested separately, they were kept identical due to time constraints.
+    * **Note on hidden_size:** Both the LSTM (mRNA sequence analysis) and the Linear Dense Layer (DQN decision making) used the same number of hidden neurons as they are related and the ouput had to be the same size as input. 
     * **Note on initial_epsilon:** Tested in August; results confirmed that changing start epsilon was not a decisive hyperparameter.
     * **Summary:** Results for each parameter are provided in separate dataframes.
 
